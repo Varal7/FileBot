@@ -8,6 +8,10 @@ const fs = require('fs');
 
 
 const token = config.token;
+const filesPath = config.filesPath;
+const urlBase = config.urlBase;
+
+
 const bot = new TelegramBot(token, {polling: true});
 
 const randomValueBase64 = function(len) {
@@ -18,9 +22,7 @@ const randomValueBase64 = function(len) {
         .replace(/\//g, '0');
 };
 
-
 const serveFile = function(fileId, mimetype, callback) {
-    const filesPath = '/var/www/files'
     const randomString = randomValueBase64(8);
     const filePath = path.join(filesPath, randomString + '.' + mime.getExtension(mimetype));
     bot.getFileLink(fileId)
@@ -44,7 +46,7 @@ const serveFile = function(fileId, mimetype, callback) {
             //    exports.convertMedia(filePath, config)
             //    .then(function(filePath) {
                     callback(
-                        "https://files.varal7.fr" + '/' + path.basename(filePath)
+                        urlBase + '/' + path.basename(filePath)
                     );
             //    });
             });
@@ -60,10 +62,42 @@ const serveFile = function(fileId, mimetype, callback) {
 
 const parseMsg = function(msg) {
     const chatId = msg.chat.id;
-    console.log(msg);
-    if (msg.photo) {
+
+    if (msg.audio) {
+        serveFile(
+            msg.audio.file_id,
+            msg.audio.mime_type,
+            function(msg) {
+                bot.sendMessage(chatId, msg);
+            }
+        );
+    } else if (msg.document) {
+        serveFile(
+            msg.document.file_id,
+            msg.document.mime_type,
+            function(msg) {
+                bot.sendMessage(chatId, msg);
+            }
+        )
+    } else if (msg.video) {
+        serveFile(
+            msg.video.file_id,
+            msg.video.mime_type,
+            function(msg) {
+                bot.sendMessage(chatId, msg);
+            }
+        )
+    } else if (msg.voice) {
+        serveFile(
+            msg.voice.file_id,
+            msg.voice.mime_type,
+            function(msg) {
+                bot.sendMessage(chatId, msg);
+            }
+        )
+    } else if (msg.photo) {
         const photo = msg.photo[msg.photo.length - 1];
-        const url = serveFile(
+        serveFile(
             photo.file_id,
             mime.getType(path.extname(photo.file_id)) || 'image/png',
             function(msg) {

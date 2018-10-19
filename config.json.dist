@@ -1,0 +1,5 @@
+{
+    "token": "TOKEN",
+    "filesPath": "/var/www/files",
+    "urlBase": "https://files.varal7.fr"
+}
